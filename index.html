@@ -1,0 +1,972 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111318">
+<title>OTXS Split — Group Expense Splitter</title>
+<meta name="description" content="Split group expenses, track shared spending, and calculate who owes whom with OTXS Split.">
+<style>
+:root {
+  --bg:#111318;
+  --panel:#191c23;
+  --panel2:#20242d;
+  --border:#303541;
+  --text:#f4f5f7;
+  --muted:#a4aab7;
+  --orange:#ff9d32;
+  --yellow:#ffd166;
+  --green:#56d6a0;
+  --red:#ff7777;
+  --radius:17px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.5;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--yellow);outline-offset:2px
+}
+header{
+  padding:19px max(18px,calc((100% - 1180px)/2));
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  border-bottom:1px solid var(--border);background:#111318;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:44px;height:44px;border-radius:13px;
+  display:grid;place-items:center;font-weight:900;font-size:19px;color:#171717;
+  background:linear-gradient(135deg,var(--yellow),var(--orange))
+}
+.brand-name{font-weight:850;letter-spacing:.7px}
+.brand-sub{font-size:12px;color:var(--muted)}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+main{max-width:1180px;margin:auto;padding:28px 18px 60px}
+.hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:24px}
+.eyebrow{color:var(--orange);font-weight:800;font-size:12px;letter-spacing:1.6px;text-transform:uppercase}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.12;letter-spacing:-1.4px;margin:8px 0}
+p{margin-top:0}
+.muted{color:var(--muted)}
+.hero p{max-width:620px;margin-bottom:0}
+.hero-mark{font-size:42px;opacity:.9}
+.layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:grid;gap:18px}
+.card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;min-width:0;
+}
+.card h2{font-size:17px;margin:0 0 15px;letter-spacing:-.2px}
+.card h3{font-size:14px;margin:0 0 10px}
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+input,select,textarea{
+  width:100%;background:#11141a;color:var(--text);
+  border:1px solid var(--border);border-radius:10px;padding:11px 12px;
+  min-width:0;
+}
+input::placeholder,textarea::placeholder{color:#777e8c}
+textarea{resize:vertical;min-height:74px}
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.row{display:flex;gap:10px;align-items:flex-end}
+.row>*{flex:1;min-width:0}
+.btn{
+  border:1px solid var(--border);border-radius:10px;padding:10px 13px;
+  background:var(--panel2);color:var(--text);font-weight:750;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn-primary{background:linear-gradient(135deg,var(--yellow),var(--orange));color:#181818;border-color:transparent}
+.btn-quiet{background:transparent}
+.btn-danger{color:var(--red);border-color:#65383d;background:#25191d}
+.btn-small{font-size:12px;padding:6px 9px}
+.full{width:100%}
+.member-list{display:grid;gap:8px;margin-top:15px}
+.member{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px;border:1px solid var(--border);border-radius:11px;background:#15181f;
+}
+.member-info{display:flex;align-items:center;gap:9px;min-width:0}
+.avatar{
+  width:33px;height:33px;flex:0 0 33px;border-radius:50%;
+  display:grid;place-items:center;font-size:12px;font-weight:900;color:#1b1b1b;
+  background:linear-gradient(135deg,var(--yellow),var(--orange))
+}
+.member-name{font-weight:750;overflow-wrap:anywhere}
+.member-meta{font-size:11px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{padding:17px;background:var(--panel);border:1px solid var(--border);border-radius:15px;min-width:0}
+.stat-label{color:var(--muted);font-size:12px;font-weight:650}
+.stat-value{font-size:clamp(18px,2.5vw,26px);font-weight:850;letter-spacing:-.8px;margin-top:6px;overflow-wrap:anywhere}
+.stat-note{font-size:11px;color:var(--muted);margin-top:4px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:17px}
+.tab{padding:9px 13px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--muted);font-weight:750}
+.tab.active{background:#35291c;color:var(--yellow);border-color:#785124}
+.panel{display:none}
+.panel.active{display:block}
+.expense-list{display:grid;gap:10px}
+.expense{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;
+  border:1px solid var(--border);border-radius:13px;padding:14px;background:#15181f;
+}
+.expense-title{font-weight:800;overflow-wrap:anywhere}
+.expense-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.expense-amount{font-weight:850;font-size:17px;text-align:right;white-space:nowrap}
+.expense-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:7px}
+.badge{font-size:10px;padding:3px 7px;border-radius:6px;background:#292d36;color:var(--muted);font-weight:800}
+.empty{border:1px dashed #424855;border-radius:12px;padding:25px 15px;text-align:center;color:var(--muted)}
+.check-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 14px}
+.check-item{
+  display:flex;align-items:center;gap:8px;background:#14171d;
+  border:1px solid var(--border);padding:10px;border-radius:10px;
+  color:var(--text);font-size:13px;min-width:0;cursor:pointer
+}
+.check-item input{width:auto;accent-color:var(--orange)}
+.check-item span{overflow-wrap:anywhere}
+.split-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.section-divider{border:0;border-top:1px solid var(--border);margin:18px 0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+td:last-child,th:last-child{text-align:right}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.settlement{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;
+  background:#15181f;
+}
+.settlement-main{font-size:13px}
+.settlement-main strong{color:var(--yellow)}
+.settlement-amount{font-weight:850;white-space:nowrap}
+.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px 12px 0}
+.notice{font-size:12px;color:var(--muted);margin-top:12px}
+.hidden{display:none!important}
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  padding:12px 17px;background:#f4f5f7;color:#161616;font-weight:750;
+  border-radius:11px;box-shadow:0 8px 35px #0008;z-index:20;
+  max-width:calc(100% - 32px)
+}
+.modal-backdrop{
+  position:fixed;inset:0;background:#000b;z-index:10;
+  display:grid;place-items:center;padding:16px;
+}
+.modal{
+  width:min(470px,100%);background:var(--panel);border:1px solid var(--border);
+  border-radius:18px;padding:22px;max-height:90vh;overflow:auto
+}
+.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.modal-head h2{margin:0 0 15px;font-size:19px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.hero-mark{display:none}}
+@media(max-width:560px){
+  header{align-items:flex-start;flex-direction:column}
+  .header-actions{width:100%}.header-actions button{flex:1}
+  main{padding:22px 12px 45px}.card{padding:16px}
+  .stats{grid-template-columns:1fr 1fr}.stat:first-child{grid-column:1/-1}
+  .row{flex-direction:column;align-items:stretch;gap:0}
+  .check-list{grid-template-columns:1fr}
+  .expense{padding:11px}
+}
+@media print{
+  :root{--bg:#fff;--panel:#fff;--panel2:#fff;--border:#ccc;--text:#111;--muted:#555}
+  body{background:white;color:black}
+  header,.hero-mark,.header-actions,.tabs,.no-print,.member-actions,.expense-actions,.footer{display:none!important}
+  main{max-width:none;padding:0}
+  .layout{display:block}
+  .card,.stat,.expense,.member,.settlement{break-inside:avoid;background:white;color:black;border-color:#ccc}
+  .stack{margin-bottom:15px}
+  .panel{display:block!important;margin-bottom:18px}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  input,select,textarea{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">OX</div>
+    <div>
+      <div class="brand-name">OTXS <span style="color:var(--orange)">SPLIT</span></div>
+      <div class="brand-sub">Shared expenses. Clear settlements.</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="exportCsvBtn">Export CSV</button>
+    <button class="btn" id="exportJsonBtn">Backup JSON</button>
+    <button class="btn btn-primary" id="printBtn">Print / PDF</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <div class="eyebrow">OTXS · Everyday tools</div>
+      <h1>Split the bill.<br><span style="color:var(--orange)">Keep the good memories.</span></h1>
+      <p class="muted">Track group expenses, see everyone's balance, and work out the simplest way to settle up.</p>
+    </div>
+    <div class="hero-mark" aria-hidden="true">↗</div>
+  </section>
+
+  <section class="stats" aria-label="Group summary">
+    <div class="stat">
+      <div class="stat-label">Total group spending</div>
+      <div class="stat-value" id="totalSpent">₹0.00</div>
+      <div class="stat-note" id="expenseCount">0 expenses recorded</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Group members</div>
+      <div class="stat-value" id="memberCount">0</div>
+      <div class="stat-note">People in this group</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Average per member</div>
+      <div class="stat-value" id="averageSpend">₹0.00</div>
+      <div class="stat-note">Based on total group spending</div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="stack">
+      <section class="card">
+        <h2>Group settings</h2>
+        <div class="field">
+          <label for="groupName">Group / trip name</label>
+          <input id="groupName" maxlength="80" placeholder="e.g. Weekend in Manali">
+        </div>
+        <div class="field">
+          <label for="currency">Currency</label>
+          <select id="currency">
+            <option value="INR">INR — Indian Rupee (₹)</option>
+            <option value="USD">USD — US Dollar ($)</option>
+            <option value="EUR">EUR — Euro (€)</option>
+            <option value="GBP">GBP — British Pound (£)</option>
+            <option value="NPR">NPR — Nepalese Rupee</option>
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="CAD">CAD — Canadian Dollar</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+            <option value="JPY">JPY — Japanese Yen (¥)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary full" id="saveSettingsBtn">Save group settings</button>
+        <p class="notice">Changing the currency changes how amounts are displayed; it does not convert existing amounts.</p>
+      </section>
+
+      <section class="card">
+        <h2>People in your group</h2>
+        <form id="memberForm">
+          <div class="field">
+            <label for="memberName">Member name</label>
+            <input id="memberName" maxlength="50" placeholder="Enter a name" required>
+          </div>
+          <button class="btn btn-primary full" type="submit">+ Add member</button>
+        </form>
+        <div class="member-list" id="memberList"></div>
+        <p class="notice">Remove a member only after deleting any expenses that refer to them.</p>
+      </section>
+
+      <section class="card">
+        <h2>Data & privacy</h2>
+        <p class="muted" style="font-size:13px">Your group data is saved in this browser on this device. It is not automatically shared with other members or synced across devices.</p>
+        <div class="stack no-print" style="gap:8px">
+          <button class="btn full" id="importJsonBtn">Import JSON backup</button>
+          <input class="hidden" id="importFile" type="file" accept=".json,application/json">
+          <button class="btn btn-danger full" id="clearDataBtn">Clear all group data</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stack">
+      <section class="card no-print">
+        <h2>Add a shared expense</h2>
+        <form id="expenseForm">
+          <div class="row">
+            <div class="field">
+              <label for="expenseTitle">Expense description</label>
+              <input id="expenseTitle" maxlength="100" placeholder="e.g. Dinner, fuel, hotel" required>
+            </div>
+            <div class="field" style="max-width:180px">
+              <label for="expenseAmount">Amount</label>
+              <input id="expenseAmount" type="number" min="0.01" max="1000000000" step="0.01" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="expenseCategory">Category</label>
+              <select id="expenseCategory">
+                <option>Food & drinks</option>
+                <option>Accommodation</option>
+                <option>Transport / fuel</option>
+                <option>Activities</option>
+                <option>Shopping</option>
+                <option>Groceries</option>
+                <option>Tickets</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="expenseDate">Date</label>
+              <input id="expenseDate" type="date" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="paidBy">Who paid?</label>
+            <select id="paidBy" required></select>
+          </div>
+          <hr class="section-divider">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+            <h3>Split this expense among</h3>
+            <span class="badge" id="selectedCount">0 selected</span>
+          </div>
+          <div class="split-tools">
+            <button type="button" class="btn btn-small" id="selectAllBtn">Select all</button>
+            <button type="button" class="btn btn-small" id="selectNoneBtn">Select none</button>
+          </div>
+          <div class="check-list" id="participantList"></div>
+          <p class="notice">The expense is split equally among the selected people, including the person who paid if they are selected.</p>
+          <button class="btn btn-primary full" type="submit" id="expenseSubmitBtn">+ Add expense</button>
+          <button class="btn btn-quiet full hidden" type="button" id="cancelEditBtn" style="margin-top:8px">Cancel editing</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="tabs no-print">
+          <button class="tab active" data-tab="expensesPanel">Expenses</button>
+          <button class="tab" data-tab="balancesPanel">Balances</button>
+          <button class="tab" data-tab="settlementsPanel">Settle up</button>
+        </div>
+
+        <section class="panel active" id="expensesPanel">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px">
+            <h2 style="margin:0">Expense history</h2>
+            <select id="filterCategory" style="width:auto;max-width:170px" aria-label="Filter expenses">
+              <option value="">All categories</option>
+              <option>Food & drinks</option>
+              <option>Accommodation</option>
+              <option>Transport / fuel</option>
+              <option>Activities</option>
+              <option>Shopping</option>
+              <option>Groceries</option>
+              <option>Tickets</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="expense-list" id="expenseList"></div>
+        </section>
+
+        <section class="panel" id="balancesPanel">
+          <h2>Member balances</h2>
+          <p class="muted" style="font-size:13px">A positive balance means a person should receive money. A negative balance means they owe money. Balances show each person's payments minus their fair share.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Member</th><th>Paid</th><th>Share</th><th>Balance</th></tr></thead>
+              <tbody id="balanceTable"></tbody>
+            </table>
+          </div>
+          <div id="balanceEmpty" class="empty hidden">Add members and expenses to see balances.</div>
+        </section>
+
+        <section class="panel" id="settlementsPanel">
+          <h2>Suggested settlements</h2>
+          <p class="muted" style="font-size:13px">These suggestions simplify repayments. They are calculations only; no money is transferred.</p>
+          <div id="settlementList"></div>
+          <div id="settlementNote" class="notice"></div>
+        </section>
+      </section>
+    </section>
+  </div>
+
+  <div class="footer">OTXS SPLIT · Discover and Explore · Your data stays in this browser</div>
+</main>
+
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "otxs_split_v1";
+  const $ = id => document.getElementById(id);
+  const today = () => new Date().toLocaleDateString("en-CA");
+
+  const defaultState = () => ({
+    groupName: "My Group",
+    currency: "INR",
+    members: [],
+    expenses: []
+  });
+
+  let state = loadState();
+  let editingExpenseId = null;
+  let toastTimer;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.members) || !Array.isArray(data.expenses)) {
+        return defaultState();
+      }
+      return {
+        groupName: typeof data.groupName === "string" ? data.groupName : "My Group",
+        currency: typeof data.currency === "string" ? data.currency : "INR",
+        members: data.members.filter(m => m && typeof m.id === "string" && typeof m.name === "string"),
+        expenses: data.expenses.filter(e =>
+          e && typeof e.id === "string" &&
+          typeof e.title === "string" &&
+          Number.isFinite(Number(e.amount)) &&
+          Array.isArray(e.participants)
+        )
+      };
+    } catch {
+      return defaultState();
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      toast("Could not save. Browser storage may be full or disabled.");
+    }
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
+  }
+
+  function money(value) {
+    const amount = Number(value) || 0;
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: state.currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    } catch {
+      return state.currency + " " + amount.toFixed(2);
+    }
+  }
+
+  function cents(value) {
+    return Math.round((Number(value) + Number.EPSILON) * 100);
+  }
+
+  function fromCents(value) {
+    return value / 100;
+  }
+
+  function roundMoney(value) {
+    return fromCents(cents(value));
+  }
+
+  function getMember(id) {
+    return state.members.find(m => m.id === id);
+  }
+
+  function initials(name) {
+    return String(name).trim().split(/\s+/).slice(0, 2).map(s => s[0] || "").join("").toUpperCase();
+  }
+
+  function toast(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add("hidden"), 2600);
+  }
+
+  function renderSettings() {
+    $("groupName").value = state.groupName;
+    $("currency").value = state.currency;
+  }
+
+  function renderMembers() {
+    $("memberList").innerHTML = "";
+    state.members.forEach(member => {
+      const item = document.createElement("div");
+      item.className = "member";
+      item.innerHTML = `
+        <div class="member-info">
+          <div class="avatar">${escapeHtml(initials(member.name))}</div>
+          <div><div class="member-name">${escapeHtml(member.name)}</div>
+          <div class="member-meta">Group member</div></div>
+        </div>
+        <div class="member-actions">
+          <button type="button" class="btn btn-small btn-danger" data-remove-member="${escapeHtml(member.id)}" aria-label="Remove ${escapeHtml(member.name)}">Remove</button>
+        </div>`;
+      $("memberList").appendChild(item);
+    });
+
+    const paidBy = $("paidBy");
+    const previousPayer = paidBy.value;
+    paidBy.innerHTML = '<option value="">Choose payer</option>';
+    state.members.forEach(member => {
+      const option = document.createElement("option");
+      option.value = member.id;
+      option.textContent = member.name;
+      paidBy.appendChild(option);
+    });
+    if (state.members.some(m => m.id === previousPayer)) paidBy.value = previousPayer;
+
+    renderParticipantChecks();
+  }
+
+  function renderParticipantChecks(selectedIds) {
+    const previous = selectedIds || [...$("participantList").querySelectorAll("input:checked")].map(i => i.value);
+    $("participantList").innerHTML = "";
+
+    if (!state.members.length) {
+      $("participantList").innerHTML = '<div class="empty" style="grid-column:1/-1">Add members to choose who shares this expense.</div>';
+      $("selectedCount").textContent = "0 selected";
+      return;
+    }
+
+    state.members.forEach(member => {
+      const label = document.createElement("label");
+      label.className = "check-item";
+      const checked = previous.includes(member.id) || (!selectedIds && previous.length === 0);
+      label.innerHTML = `<input type="checkbox" value="${escapeHtml(member.id)}" ${checked ? "checked" : ""}><span>${escapeHtml(member.name)}</span>`;
+      $("participantList").appendChild(label);
+    });
+    updateSelectedCount();
+  }
+
+  function selectedParticipants() {
+    return [...$("participantList").querySelectorAll("input:checked")].map(i => i.value);
+  }
+
+  function updateSelectedCount() {
+    $("selectedCount").textContent = selectedParticipants().length + " selected";
+  }
+
+  function validExpense(e) {
+    const memberIds = new Set(state.members.map(m => m.id));
+    return memberIds.has(e.paidBy) &&
+      Array.isArray(e.participants) &&
+      e.participants.length > 0 &&
+      e.participants.every(id => memberIds.has(id)) &&
+      Number(e.amount) > 0;
+  }
+
+  function getStats() {
+    const totalCents = state.expenses.reduce((sum, e) => sum + cents(e.amount), 0);
+    const paid = Object.fromEntries(state.members.map(m => [m.id, 0]));
+    const owed = Object.fromEntries(state.members.map(m => [m.id, 0]));
+
+    state.expenses.forEach(e => {
+      if (!validExpense(e)) return;
+      const amountCents = cents(e.amount);
+      paid[e.paidBy] += amountCents;
+
+      const ids = [...new Set(e.participants)];
+      const base = Math.floor(amountCents / ids.length);
+      let remainder = amountCents - base * ids.length;
+
+      ids.forEach(id => {
+        owed[id] += base + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder--;
+      });
+    });
+
+    const balances = state.members.map(member => ({
+      ...member,
+      paid: paid[member.id] || 0,
+      owed: owed[member.id] || 0,
+      balance: (paid[member.id] || 0) - (owed[member.id] || 0)
+    }));
+
+    return {totalCents, paid, owed, balances};
+  }
+
+  function renderStats() {
+    const {totalCents} = getStats();
+    $("totalSpent").textContent = money(fromCents(totalCents));
+    $("expenseCount").textContent = state.expenses.length + (state.expenses.length === 1 ? " expense recorded" : " expenses recorded");
+    $("memberCount").textContent = state.members.length;
+    $("averageSpend").textContent = money(state.members.length ? fromCents(Math.round(totalCents / state.members.length)) : 0);
+  }
+
+  function renderExpenses() {
+    const filter = $("filterCategory").value;
+    const expenses = [...state.expenses]
+      .filter(e => !filter || e.category === filter)
+      .sort((a,b) => String(b.date).localeCompare(String(a.date)));
+
+    $("expenseList").innerHTML = "";
+    if (!expenses.length) {
+      $("expenseList").innerHTML = '<div class="empty">No expenses yet. Add your first shared expense above.</div>';
+      return;
+    }
+
+    expenses.forEach(expense => {
+      const payer = getMember(expense.paidBy);
+      const participants = expense.participants.map(getMember).filter(Boolean);
+      const item = document.createElement("article");
+      item.className = "expense";
+      item.innerHTML = `
+        <div>
+          <div class="expense-title">${escapeHtml(expense.title)}</div>
+          <div class="expense-meta">${escapeHtml(expense.date || "")} · Paid by ${escapeHtml(payer?.name || "Unknown")} · Split between ${participants.length} ${participants.length === 1 ? "person" : "people"}</div>
+          <div style="margin-top:8px"><span class="badge">${escapeHtml(expense.category || "Other")}</span></div>
+        </div>
+        <div>
+          <div class="expense-amount">${money(expense.amount)}</div>
+          <div class="expense-actions no-print">
+            <button class="btn btn-small" type="button" data-edit-expense="${escapeHtml(expense.id)}">Edit</button>
+            <button class="btn btn-small btn-danger" type="button" data-delete-expense="${escapeHtml(expense.id)}">Delete</button>
+          </div>
+        </div>`;
+      $("expenseList").appendChild(item);
+    });
+  }
+
+  function renderBalances() {
+    const {balances} = getStats();
+    $("balanceTable").innerHTML = "";
+    $("balanceEmpty").classList.toggle("hidden", balances.length > 0);
+
+    balances.forEach(member => {
+      const tr = document.createElement("tr");
+      const cls = member.balance > 0 ? "positive" : member.balance < 0 ? "negative" : "";
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(member.name)}</strong></td>
+        <td>${money(fromCents(member.paid))}</td>
+        <td>${money(fromCents(member.owed))}</td>
+        <td class="${cls}"><strong>${member.balance > 0 ? "+" : ""}${money(fromCents(member.balance))}</strong></td>`;
+      $("balanceTable").appendChild(tr);
+    });
+  }
+
+  function calculateSettlements() {
+    const {balances} = getStats();
+    const creditors = balances.filter(m => m.balance > 0).map(m => ({id:m.id,name:m.name,balance:m.balance}));
+    const debtors = balances.filter(m => m.balance < 0).map(m => ({id:m.id,name:m.name,balance:-m.balance}));
+    const transfers = [];
+
+    creditors.sort((a,b) => b.balance-a.balance);
+    debtors.sort((a,b) => b.balance-a.balance);
+
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const amount = Math.min(debtors[i].balance, creditors[j].balance);
+      if (amount > 0) {
+        transfers.push({from:debtors[i].name,to:creditors[j].name,amount});
+        debtors[i].balance -= amount;
+        creditors[j].balance -= amount;
+      }
+      if (debtors[i].balance === 0) i++;
+      if (creditors[j].balance === 0) j++;
+    }
+    return transfers;
+  }
+
+  function renderSettlements() {
+    const list = $("settlementList");
+    const transfers = calculateSettlements();
+    list.innerHTML = "";
+
+    if (!state.members.length || !state.expenses.length) {
+      list.innerHTML = '<div class="empty">Add group members and expenses to calculate settlements.</div>';
+      $("settlementNote").textContent = "";
+      return;
+    }
+    if (!transfers.length) {
+      list.innerHTML = '<div class="empty">Everyone is settled up. No repayments are needed.</div>';
+      $("settlementNote").textContent = "";
+      return;
+    }
+
+    transfers.forEach(t => {
+      const item = document.createElement("div");
+      item.className = "settlement";
+      item.innerHTML = `
+        <div class="settlement-main"><strong>${escapeHtml(t.from)}</strong> pays <strong>${escapeHtml(t.to)}</strong></div>
+        <div class="settlement-amount">${money(fromCents(t.amount))}</div>`;
+      list.appendChild(item);
+    });
+
+    $("settlementNote").textContent = transfers.length + " suggested " + (transfers.length === 1 ? "payment" : "payments") + " to settle the current balances.";
+  }
+
+  function renderAll() {
+    renderSettings();
+    renderMembers();
+    renderStats();
+    renderExpenses();
+    renderBalances();
+    renderSettlements();
+  }
+
+  function resetExpenseForm() {
+    editingExpenseId = null;
+    $("expenseForm").reset();
+    $("expenseDate").value = today();
+    $("expenseSubmitBtn").textContent = "+ Add expense";
+    $("cancelEditBtn").classList.add("hidden");
+    renderParticipantChecks(state.members.map(m => m.id));
+    $("paidBy").value = state.members[0]?.id || "";
+  }
+
+  function startEditExpense(id) {
+    const e = state.expenses.find(x => x.id === id);
+    if (!e) return;
+    editingExpenseId = id;
+    $("expenseTitle").value = e.title;
+    $("expenseAmount").value = e.amount;
+    $("expenseCategory").value = e.category || "Other";
+    $("expenseDate").value = e.date || today();
+    $("paidBy").value = e.paidBy;
+    renderParticipantChecks(e.participants);
+    $("expenseSubmitBtn").textContent = "Save expense changes";
+    $("cancelEditBtn").classList.remove("hidden");
+    $("expenseForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  $("saveSettingsBtn").addEventListener("click", () => {
+    state.groupName = $("groupName").value.trim() || "My Group";
+    state.currency = $("currency").value;
+    saveState();
+    renderAll();
+    toast("Group settings saved.");
+  });
+
+  $("memberForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const name = $("memberName").value.trim();
+    if (!name) return;
+    if (state.members.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+      toast("A member with that name already exists.");
+      return;
+    }
+    const member = {id:uid(),name};
+    state.members.push(member);
+    $("memberName").value = "";
+    saveState();
+    renderAll();
+    if (state.members.length === 1) $("paidBy").value = member.id;
+    toast(name + " added to the group.");
+  });
+
+  $("memberList").addEventListener("click", event => {
+    const btn = event.target.closest("[data-remove-member]");
+    if (!btn) return;
+    const id = btn.dataset.removeMember;
+    const member = getMember(id);
+    if (!member) return;
+
+    if (state.expenses.some(e => e.paidBy === id || e.participants.includes(id))) {
+      toast("This member is used in an expense. Delete or edit those expenses first.");
+      return;
+    }
+    if (!confirm("Remove " + member.name + " from this group?")) return;
+    state.members = state.members.filter(m => m.id !== id);
+    saveState();
+    renderAll();
+    toast("Member removed.");
+  });
+
+  $("participantList").addEventListener("change", updateSelectedCount);
+
+  $("selectAllBtn").addEventListener("click", () => {
+    $("participantList").querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = true);
+    updateSelectedCount();
+  });
+
+  $("selectNoneBtn").addEventListener("click", () => {
+    $("participantList").querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+    updateSelectedCount();
+  });
+
+  $("expenseForm").addEventListener("submit", event => {
+    event.preventDefault();
+
+    const title = $("expenseTitle").value.trim();
+    const amount = Number($("expenseAmount").value);
+    const paidBy = $("paidBy").value;
+    const participants = selectedParticipants();
+    const date = $("expenseDate").value;
+    const category = $("expenseCategory").value;
+
+    if (!state.members.length) return toast("Add at least one group member first.");
+    if (!title) return toast("Enter an expense description.");
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000000) return toast("Enter a valid amount.");
+    if (!paidBy || !getMember(paidBy)) return toast("Choose who paid.");
+    if (!participants.length) return toast("Select at least one participant.");
+    if (participants.some(id => !getMember(id))) return toast("A selected participant is no longer in the group.");
+
+    const expense = {
+      id: editingExpenseId || uid(),
+      title, amount:roundMoney(amount), paidBy,
+      participants:[...new Set(participants)],
+      date:date || today(), category
+    };
+
+    if (editingExpenseId) {
+      const index = state.expenses.findIndex(e => e.id === editingExpenseId);
+      if (index !== -1) state.expenses[index] = expense;
+      toast("Expense updated.");
+    } else {
+      state.expenses.push(expense);
+      toast("Expense added.");
+    }
+
+    saveState();
+    resetExpenseForm();
+    renderAll();
+  });
+
+  $("cancelEditBtn").addEventListener("click", resetExpenseForm);
+
+  $("expenseList").addEventListener("click", event => {
+    const edit = event.target.closest("[data-edit-expense]");
+    const del = event.target.closest("[data-delete-expense]");
+
+    if (edit) startEditExpense(edit.dataset.editExpense);
+    if (del) {
+      const id = del.dataset.deleteExpense;
+      const expense = state.expenses.find(e => e.id === id);
+      if (!expense) return;
+      if (!confirm('Delete expense "' + expense.title + '"?')) return;
+      state.expenses = state.expenses.filter(e => e.id !== id);
+      if (editingExpenseId === id) resetExpenseForm();
+      saveState();
+      renderAll();
+      toast("Expense deleted.");
+    }
+  });
+
+  $("filterCategory").addEventListener("change", renderExpenses);
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+      document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === tab.dataset.tab));
+    });
+  });
+
+  function downloadFile(filename, content, type) {
+    const blob = new Blob([content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function safeFilename(value) {
+    return (value || "otxs-split").toLowerCase().replace(/[^a-z0-9-_]+/g,"-").replace(/^-+|-+$/g,"") || "otxs-split";
+  }
+
+  $("exportCsvBtn").addEventListener("click", () => {
+    const rows = [
+      ["Group",state.groupName],
+      ["Currency",state.currency],
+      [],
+      ["Date","Description","Category","Amount","Paid by","Participants","Equal share per participant"]
+    ];
+    state.expenses.forEach(e => {
+      const participantNames = e.participants.map(id => getMember(id)?.name || "Unknown");
+      const share = e.participants.length ? roundMoney(Number(e.amount) / e.participants.length) : 0;
+      rows.push([e.date,e.title,e.category,e.amount,getMember(e.paidBy)?.name || "Unknown",participantNames.join(", "),share]);
+    });
+    rows.push([]);
+    rows.push(["Member","Paid","Share","Balance"]);
+    getStats().balances.forEach(m => rows.push([m.name,fromCents(m.paid),fromCents(m.owed),fromCents(m.balance)]));
+
+    const csv = rows.map(row => row.map(value => {
+      const str = String(value ?? "");
+      return '"' + str.replace(/"/g,'""') + '"';
+    }).join(",")).join("\r\n");
+
+    downloadFile(safeFilename(state.groupName) + "-expenses.csv","\uFEFF" + csv,"text/csv;charset=utf-8");
+    toast("CSV export prepared.");
+  });
+
+  $("exportJsonBtn").addEventListener("click", () => {
+    const backup = {
+      app:"OTXS Split",
+      version:1,
+      exportedAt:new Date().toISOString(),
+      ...state
+    };
+    downloadFile(safeFilename(state.groupName) + "-backup.json",JSON.stringify(backup,null,2),"application/json");
+    toast("JSON backup prepared.");
+  });
+
+  $("importJsonBtn").addEventListener("click", () => $("importFile").click());
+
+  $("importFile").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      const imported = JSON.parse(await file.text());
+      if (!imported || !Array.isArray(imported.members) || !Array.isArray(imported.expenses)) {
+        throw new Error("That file does not look like an OTXS Split backup.");
+      }
+      const validMembers = imported.members.every(m => m && typeof m.id === "string" && typeof m.name === "string");
+      const validExpenses = imported.expenses.every(e =>
+        e && typeof e.id === "string" && typeof e.title === "string" &&
+        Number.isFinite(Number(e.amount)) && Array.isArray(e.participants)
+      );
+      if (!validMembers || !validExpenses) throw new Error("The backup contains invalid data.");
+      if (!confirm("Importing will replace the current group and its expenses. Continue?")) return;
+
+      state = {
+        groupName:typeof imported.groupName === "string" ? imported.groupName : "Imported group",
+        currency:["INR","USD","EUR","GBP","NPR","AED","CAD","AUD","JPY"].includes(imported.currency) ? imported.currency : "INR",
+        members:imported.members,
+        expenses:imported.expenses
+      };
+
+      const ids = new Set(state.members.map(m => m.id));
+      state.expenses = state.expenses.filter(e =>
+        ids.has(e.paidBy) && e.participants.length > 0 &&
+        e.participants.every(id => ids.has(id)) && Number(e.amount) > 0
+      );
+      saveState();
+      resetExpenseForm();
+      renderAll();
+      toast("Backup imported.");
+    } catch (error) {
+      alert(error.message || "Unable to read that backup file.");
+    } finally {
+      event.target.value = "";
+    }
+  });
+
+  $("printBtn").addEventListener("click", () => window.print());
+
+  $("clearDataBtn").addEventListener("click", () => {
+    if (!confirm("Clear this group's members, expenses, and settings from this browser? This cannot be undone unless you have a backup.")) return;
+    state = defaultState();
+    editingExpenseId = null;
+    saveState();
+    resetExpenseForm();
+    renderAll();
+    toast("Group data cleared.");
+  });
+
+  $("expenseDate").value = today();
+  renderAll();
+  resetExpenseForm();
+})();
+</script>
+</body>
+</html>
+
